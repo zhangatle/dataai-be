@@ -24,5 +24,5 @@ Route::middleware(["auth:api", "cors"])->group(function () {
     Route::post('/suggest', [SearchController::class, 'suggest']);
     Route::get('/hot', [SearchController::class, 'hot']);
     Route::get('/search', [SearchController::class, 'search']);
-    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/logout', [AuthController::class, 'logout']);
 });

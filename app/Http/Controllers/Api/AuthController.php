@@ -52,8 +52,7 @@ class AuthController extends ApiController
     public function logout(): JsonResponse
     {
         auth()->logout();
-
-        return response()->json(['message' => 'Successfully logged out']);
+        return $this->success([]);
     }
 
     /**

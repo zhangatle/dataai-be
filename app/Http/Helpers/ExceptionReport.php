@@ -59,7 +59,7 @@ class ExceptionReport
         NotFoundHttpException::class => ['没有找到该页面', 404],
         MethodNotAllowedHttpException::class => ['访问方式不正确', 405],
         ErrorException::class => ['服务器内部错误', 500],
-//        QueryException::class => ['参数错误', 400],
+        QueryException::class => ['参数错误', 400],
     ];
 
     public function register($className, callable $callback)
@@ -103,7 +103,7 @@ class ExceptionReport
             return $this->failed(current($this->exception->errors()), $this->exception->status);
         }
         $message = $this->doReport[$this->report];
-        return $this->failed($message[0], $message[1]);
+        return $this->success([],$message[0]);
     }
 
     public function prodReport()
