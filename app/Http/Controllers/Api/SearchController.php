@@ -52,7 +52,7 @@ class SearchController extends ApiController
         $suggestions = $suggestions["suggest"]["my-suggest"][0]["options"];
         foreach ($suggestions as $item) {
             $source = $item["_source"];
-            array_push($suggest_list,Str::limit($source["content"], $limit = 80, $end = '...'));
+            array_push($suggest_list,Str::limit($source["message_content"], $limit = 80, $end = '...'));
         }
         return $this->success($suggest_list);
     }
@@ -235,11 +235,12 @@ class SearchController extends ApiController
             $group = Friend::query()->where(["wxid" => $source["wxid"], "nickname" => $source["nickname"], "customer_id" => $customer_id, "friend_id" => $source["message_wxid"]])->first();
 
             /** 有个去重的需要，es本身比较难实现，这里巧妙利用打分机制，打分完成相同的，就只取最新的一条 */
-            if(in_array($item["_score"], $distinct_score)){
-                continue;
-            }else{
-                array_push($distinct_score, $item["_score"]);
-            }
+//            if(in_array($item["_score"], $distinct_score)){
+//                continue;
+//            }else{
+//                array_push($distinct_score, $item["_score"]);
+//            }
+            array_push($distinct_score, $item["_score"]);
             $group_name = $group ? $group->friend_nickname : "未知";
             $item_arr = [
                 "nickname" => $source["nickname"] ?? "未知",
@@ -262,9 +263,9 @@ class SearchController extends ApiController
             "page" => $page,
             "hit_list" => $hit_list,
             "total" => $total,
-            "page_nums" => $total < 10 ? 1 : intval($total / 10),
+            "page_nums" => $total < 10 ? 1 : intval($total / 10)+1,
             "last_seconds" => $last_time,
-            "top_search" => $top_search,
+            "hot_search" => $top_search,
             "count" => 1,
             "key_words" => $keywords,
         ];

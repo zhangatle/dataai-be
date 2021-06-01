@@ -103,7 +103,7 @@ class ExceptionReport
             return $this->failed(current($this->exception->errors()), $this->exception->status);
         }
         $message = $this->doReport[$this->report];
-        return $this->success([],$message[0]);
+        return $this->failed($message[0], $message[1]);
     }
 
     public function prodReport()

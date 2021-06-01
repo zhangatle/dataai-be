@@ -30,7 +30,7 @@ class AuthController extends ApiController
             $token = auth()->login($user);
             return $this->success($this->formatToken($token));
         } else {
-            return $this->success([], "登录失败");
+            return $this->success([], "用户名或密码错误");
         }
     }
 
