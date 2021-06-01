@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api;
 
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Hash;
 
 class AuthController extends ApiController
 {
