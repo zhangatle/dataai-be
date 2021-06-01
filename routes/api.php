@@ -18,8 +18,11 @@ use App\Http\Controllers\Api\SearchController;
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/friend', [SearchController::class, 'friend']);
+Route::post('/message', [SearchController::class, 'addMessage']);
 
 Route::middleware(["auth:api", "cors"])->group(function () {
     Route::post('/suggest', [SearchController::class, 'suggest']);
+    Route::get('/hot', [SearchController::class, 'hot']);
+    Route::get('/search', [SearchController::class, 'search']);
     Route::post('/logout', [AuthController::class, 'logout']);
 });

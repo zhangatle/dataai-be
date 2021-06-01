@@ -99,49 +99,46 @@ class SearchController extends ApiController
     /**
      * 存储记录
      */
-//    public function message(MessageRequest $request) {
-//        $client = ClientBuilder::create()->build();
-//
-//        $api_id = $request->input("api_id","");
-//        $api_key = $request->input("api_key","");
-//
-//        $content_json = $request->input("content_json", []);
-//
-//        $nickname = $content_json["nickname"];
-//        $wxid = $content_json["wxid"];
-//        $message_msg_type = $content_json["message"]["msg_type"];
-//        $message_wxid = $content_json["message"]["wxid"];
-//        $message_sender = $content_json["message"]["sender"];
-//        $message_content = $content_json["message"]["content"];
-//
-//
-//        $es_index = "dataai_es_index_".md5($api_id.$api_key);
-//        // 判断索引是否存在(如果不存在，则可以直接判定企业不存在)
-//        if(!$client->indices()->exists(["index"=> $es_index])){
-//            return ["message"=> "false"];
-//        }
-//
-//        $suggests = $this->gen_suggest($es_index, [$message_content=>10]);
-//        $params = [
-//            "index" => $es_index,
-//            "type" => "_doc",
-//            "body" => [
-//                "nickname" => $nickname,
-//                "wxid" => $wxid,
-//                "message_msg_type" => $message_msg_type,
-//                "message_wxid" => $message_wxid,
-//                "message_sender" => $message_sender,
-//                "message_content" => $message_content,
-//                "add_time" => Carbon::now()->timestamp,
-//                "suggest" => $suggests,
-//            ]
-//        ];
-//        $response = $client->index($params);
-//        return [
-//            "status" => 0,
-//            "message" => "success"
-//        ];
-//    }
+    public function addMessage(MessageRequest $request) {
+        $client = ClientBuilder::create()->build();
+
+        $api_id = $request->input("api_id","");
+        $api_key = $request->input("api_key","");
+
+        $content_json = $request->input("content_json", []);
+
+        $nickname = $content_json["nickname"];
+        $wxid = $content_json["wxid"];
+        $message_msg_type = $content_json["message"]["msg_type"];
+        $message_wxid = $content_json["message"]["wxid"];
+        $message_sender = $content_json["message"]["sender"];
+        $message_content = $content_json["message"]["content"];
+
+
+        $es_index = "dataai_es_index_".md5($api_id.$api_key);
+        // 判断索引是否存在(如果不存在，则可以直接判定企业不存在)
+        if(!$client->indices()->exists(["index"=> $es_index])){
+            return $this->success([], "索引错误");
+        }
+
+        $suggests = $this->gen_suggest($es_index, [$message_content=>10]);
+        $params = [
+            "index" => $es_index,
+            "type" => "_doc",
+            "body" => [
+                "nickname" => $nickname,
+                "wxid" => $wxid,
+                "message_msg_type" => $message_msg_type,
+                "message_wxid" => $message_wxid,
+                "message_sender" => $message_sender,
+                "message_content" => $message_content,
+                "add_time" => Carbon::now()->timestamp,
+                "suggest" => $suggests,
+            ]
+        ];
+        $client->index($params);
+        return $this->success([]);
+    }
 
     /**
      * 生成搜索建议
@@ -171,7 +168,7 @@ class SearchController extends ApiController
     {
         // 获取热门搜索关键词
         $top_search = Redis::zrevrangebyscore("search_keywords_set", "+inf", "-inf", ["limit" => ["offset" => 0, "count" => 5]]);
-        return view("index", ["top_search" => $top_search]);
+        return $this->success($top_search);
     }
 
     /**
@@ -187,17 +184,9 @@ class SearchController extends ApiController
         $es_index = "dataai_es_index_" . md5($customer->api_id . $customer->api_key);
         $page = $request->input("p", 1);
         $keywords = $request->input("q", "");
+
         if ($keywords == "") {
-            return view("result")->with([
-                "page" => $page,
-                "hit_list" => [],
-                "total" => 0,
-                "page_nums" => 0,
-                "last_seconds" => 0,
-                "top_search" => Redis::zrevrangebyscore("search_keywords_set", "+inf", "-inf", ["limit" => ["offset" => 0, "count" => 5]]),
-                "count" => 0,
-                "key_words" => "",
-            ]);
+            return $this->success([]);
         }
         Redis::zincrby("search_keywords_set", 1, Str::limit($keywords, 10, "..."));
         $top_search = Redis::zrevrangebyscore("search_keywords_set", "+inf", "-inf", ["limit" => ["offset" => 0, "count" => 5]]);
@@ -243,7 +232,7 @@ class SearchController extends ApiController
         foreach ($response['hits']['hits'] as $item) {
             $source = $item["_source"];
             /** 此处应该借助redis提高效率 */
-            $group = Friend::query()->where(["wxid" => $source["wxid"], "nickname" => $source["nickname"], "customer_id" => $customer_id, "friend_id" => $source["message_wxid"]])->firstOrFail();
+            $group = Friend::query()->where(["wxid" => $source["wxid"], "nickname" => $source["nickname"], "customer_id" => $customer_id, "friend_id" => $source["message_wxid"]])->first();
 
             /** 有个去重的需要，es本身比较难实现，这里巧妙利用打分机制，打分完成相同的，就只取最新的一条 */
             if(in_array($item["_score"], $distinct_score)){
@@ -279,6 +268,6 @@ class SearchController extends ApiController
             "count" => 1,
             "key_words" => $keywords,
         ];
-        return view("result")->with($res);
+        return $this->success($res);
     }
 }
