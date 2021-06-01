@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Api\FriendRequest;
 use App\Http\Requests\Api\MessageRequest;
+use App\Models\Customer;
 use Carbon\Carbon;
 use Elasticsearch\ClientBuilder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Str;
 
@@ -15,14 +17,14 @@ class SearchController extends ApiController
     /**
      * 获取搜索建议
      */
-    public function suggest(Request $request): array
+    public function suggest(Request $request)
     {
         $keywords = $request->input("s", "");
         $suggest_list = [];
         $client = ClientBuilder::create()->build();
         $user = Auth::user();
         $customer_id = $user->customer_id;
-        if (!$customer = Customer::query()->where("id", $customer_id)->first()) {
+        if (!$customer = Customer::query()->where("id", $customer_id)->where("is_active", 1)->first()) {
             return ["message" => "企业不存在"];
         }
         $es_index = "dataai_es_index_" . md5($customer->api_id . $customer->api_key);
@@ -50,7 +52,7 @@ class SearchController extends ApiController
             $source = $item["_source"];
             array_push($suggest_list,Str::limit($source["content"], $limit = 80, $end = '...'));
         }
-        return $suggest_list;
+        return $this->success($suggest_list);
     }
 
     /**
@@ -94,49 +96,49 @@ class SearchController extends ApiController
     /**
      * 存储记录
      */
-    public function message(MessageRequest $request) {
-        $client = ClientBuilder::create()->build();
-
-        $api_id = $request->input("api_id","");
-        $api_key = $request->input("api_key","");
-
-        $content_json = $request->input("content_json", []);
-
-        $nickname = $content_json["nickname"];
-        $wxid = $content_json["wxid"];
-        $message_msg_type = $content_json["message"]["msg_type"];
-        $message_wxid = $content_json["message"]["wxid"];
-        $message_sender = $content_json["message"]["sender"];
-        $message_content = $content_json["message"]["content"];
-
-
-        $es_index = "dataai_es_index_".md5($api_id.$api_key);
-        // 判断索引是否存在(如果不存在，则可以直接判定企业不存在)
-        if(!$client->indices()->exists(["index"=> $es_index])){
-            return ["message"=> "false"];
-        }
-
-        $suggests = $this->gen_suggest($es_index, [$message_content=>10]);
-        $params = [
-            "index" => $es_index,
-            "type" => "_doc",
-            "body" => [
-                "nickname" => $nickname,
-                "wxid" => $wxid,
-                "message_msg_type" => $message_msg_type,
-                "message_wxid" => $message_wxid,
-                "message_sender" => $message_sender,
-                "message_content" => $message_content,
-                "add_time" => Carbon::now()->timestamp,
-                "suggest" => $suggests,
-            ]
-        ];
-        $response = $client->index($params);
-        return [
-            "status" => 0,
-            "message" => "success"
-        ];
-    }
+//    public function message(MessageRequest $request) {
+//        $client = ClientBuilder::create()->build();
+//
+//        $api_id = $request->input("api_id","");
+//        $api_key = $request->input("api_key","");
+//
+//        $content_json = $request->input("content_json", []);
+//
+//        $nickname = $content_json["nickname"];
+//        $wxid = $content_json["wxid"];
+//        $message_msg_type = $content_json["message"]["msg_type"];
+//        $message_wxid = $content_json["message"]["wxid"];
+//        $message_sender = $content_json["message"]["sender"];
+//        $message_content = $content_json["message"]["content"];
+//
+//
+//        $es_index = "dataai_es_index_".md5($api_id.$api_key);
+//        // 判断索引是否存在(如果不存在，则可以直接判定企业不存在)
+//        if(!$client->indices()->exists(["index"=> $es_index])){
+//            return ["message"=> "false"];
+//        }
+//
+//        $suggests = $this->gen_suggest($es_index, [$message_content=>10]);
+//        $params = [
+//            "index" => $es_index,
+//            "type" => "_doc",
+//            "body" => [
+//                "nickname" => $nickname,
+//                "wxid" => $wxid,
+//                "message_msg_type" => $message_msg_type,
+//                "message_wxid" => $message_wxid,
+//                "message_sender" => $message_sender,
+//                "message_content" => $message_content,
+//                "add_time" => Carbon::now()->timestamp,
+//                "suggest" => $suggests,
+//            ]
+//        ];
+//        $response = $client->index($params);
+//        return [
+//            "status" => 0,
+//            "message" => "success"
+//        ];
+//    }
 
     /**
      * 生成搜索建议
