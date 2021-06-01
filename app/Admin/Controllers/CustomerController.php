@@ -70,7 +70,7 @@ class CustomerController extends AdminController
                 $form->text('api_id')->value(Str::random(32));
                 $form->text('api_key')->value(Str::random(32));
             }
-            $form->select('is_active')->options([1,0])->default(0);
+            $form->select('is_active')->options([1=>"启用", 0=>"禁用"]);
             $form->display('created_at');
             $form->display('updated_at');
             $form->saved(function (Form $form) {
