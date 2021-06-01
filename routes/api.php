@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\SearchController;
 
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/friend', [SearchController::class, 'friend']);
 
 Route::middleware(["auth:api", "cors"])->group(function () {
     Route::post('/suggest', [SearchController::class, 'suggest']);

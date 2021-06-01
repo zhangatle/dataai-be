@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Api;
 use App\Http\Requests\Api\FriendRequest;
 use App\Http\Requests\Api\MessageRequest;
 use App\Models\Customer;
+use App\Models\Friend;
 use Carbon\Carbon;
 use Elasticsearch\ClientBuilder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Str;
 
@@ -58,12 +60,13 @@ class SearchController extends ApiController
     /**
      * 添加好友关系
      */
-    public function friend(FriendRequest $request) {
+    public function friend(FriendRequest $request)
+    {
         $api_id = $request->input("api_id", "");
         $api_key = $request->input("api_key", "");
 
-        if(!$customer = Customer::query()->where("api_id", $api_id)->where("api_key", $api_key)->first()){
-            return ["message" => "企业不存在"];
+        if(!$customer = Customer::query()->where("api_id", $api_id)->where("api_key", $api_key)->where("is_active", 1)->first()){
+            return $this->success([], "企业不存在");
         }
 
         $content_json = $request->input("content_json", []);
@@ -90,7 +93,7 @@ class SearchController extends ApiController
                 Log::info($exception);
             }
         }
-        return ["message"=> "success"];
+        return $this->success([]);
     }
 
     /**
