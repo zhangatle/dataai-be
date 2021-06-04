@@ -88,7 +88,7 @@ class SearchController extends ApiController
             $friend->friend_nickname = $friend_nickname;
             $friend->friend_number = $friend_number;
             try {
-                $friend->saveOrFail();
+                $friend->save();
             }catch (\Exception $exception){
                 Log::info($exception);
             }
@@ -235,11 +235,11 @@ class SearchController extends ApiController
             $group = Friend::query()->where(["wxid" => $source["wxid"], "nickname" => $source["nickname"], "customer_id" => $customer_id, "friend_id" => $source["message_wxid"]])->first();
 
             /** 有个去重的需要，es本身比较难实现，这里巧妙利用打分机制，打分完成相同的，就只取最新的一条 */
-//            if(in_array($item["_score"], $distinct_score)){
-//                continue;
-//            }else{
-//                array_push($distinct_score, $item["_score"]);
-//            }
+            if(in_array($item["_score"], $distinct_score)){
+                continue;
+            }else{
+                array_push($distinct_score, $item["_score"]);
+            }
             array_push($distinct_score, $item["_score"]);
             $group_name = $group ? $group->friend_nickname : "未知";
             $item_arr = [
