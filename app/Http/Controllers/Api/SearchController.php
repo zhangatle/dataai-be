@@ -121,6 +121,11 @@ class SearchController extends ApiController
             return $this->success([], "索引错误");
         }
 
+        // 入库时利用redis进行去重
+        if(!Redis::sadd($es_index, md5($message_content))) {
+            return $this->success([]);
+        }
+
         $suggests = $this->gen_suggest($es_index, [$message_content=>10]);
         $params = [
             "index" => $es_index,
@@ -228,19 +233,11 @@ class SearchController extends ApiController
         $response = $client->search($params);
         $last_time = microtime(true) - $start;
         $hit_list = [];
-        $distinct_score = [];
+        $total = $response["hits"]["total"]["value"];
         foreach ($response['hits']['hits'] as $item) {
             $source = $item["_source"];
             /** 此处应该借助redis提高效率 */
             $group = Friend::query()->where(["wxid" => $source["wxid"], "nickname" => $source["nickname"], "customer_id" => $customer_id, "friend_id" => $source["message_wxid"]])->first();
-
-            /** 有个去重的需要，es本身比较难实现，这里巧妙利用打分机制，打分完成相同的，就只取最新的一条 */
-            if(in_array($item["_score"], $distinct_score)){
-                continue;
-            }else{
-                array_push($distinct_score, $item["_score"]);
-            }
-            array_push($distinct_score, $item["_score"]);
             $group_name = $group ? $group->friend_nickname : "未知";
             $item_arr = [
                 "nickname" => $source["nickname"] ?? "未知",
@@ -258,7 +255,6 @@ class SearchController extends ApiController
             }
             array_push($hit_list, $item_arr);
         }
-        $total = $response["hits"]["total"]["value"];
         $res = [
             "page" => $page,
             "hit_list" => $hit_list,
@@ -266,8 +262,7 @@ class SearchController extends ApiController
             "page_nums" => $total < 10 ? 1 : intval($total / 10)+1,
             "last_seconds" => $last_time,
             "hot_search" => $top_search,
-            "count" => 1,
-            "key_words" => $keywords,
+            "keywords" => $keywords,
         ];
         return $this->success($res);
     }
