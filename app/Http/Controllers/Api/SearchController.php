@@ -6,6 +6,7 @@ use App\Http\Requests\Api\FriendRequest;
 use App\Http\Requests\Api\MessageRequest;
 use App\Models\Customer;
 use App\Models\Friend;
+use App\Services\RedisService;
 use Carbon\Carbon;
 use Elasticsearch\ClientBuilder;
 use Illuminate\Http\Request;
@@ -26,8 +27,11 @@ class SearchController extends ApiController
         $client = ClientBuilder::create()->build();
         $user = Auth::user();
         $customer_id = $user->customer_id;
-        if (!$customer = Customer::query()->where("id", $customer_id)->where("is_active", 1)->first()) {
-            return ["message" => "企业不存在"];
+        $customer = RedisService::cacheObject("getCustomerById", [$customer_id, 1], function () use ($customer_id) {
+            return Customer::query()->where("id", $customer_id)->where("is_active", 1)->first();
+        });
+        if (!$customer) {
+            return $this->success([], '企业不存在');
         }
         $es_index = "dataai_es_index_" . md5($customer->api_id . $customer->api_key);
         $params = [
@@ -65,7 +69,10 @@ class SearchController extends ApiController
         $api_id = $request->input("api_id", "");
         $api_key = $request->input("api_key", "");
 
-        if(!$customer = Customer::query()->where("api_id", $api_id)->where("api_key", $api_key)->where("is_active", 1)->first()){
+        $customer = RedisService::cacheObject("getCustomerByApiIdApiKey", [$api_id, $api_key,1], function () use ($api_id, $api_key) {
+            return Customer::query()->where("api_id", $api_id)->where("api_key", $api_key)->where("is_active", 1)->first();
+        });
+        if(!$customer){
             return $this->success([], "企业不存在");
         }
 
@@ -120,12 +127,10 @@ class SearchController extends ApiController
         if(!$client->indices()->exists(["index"=> $es_index])){
             return $this->success([], "索引错误");
         }
-
         // 入库时利用redis进行去重
         if(!Redis::sadd($es_index, md5($message_content))) {
             return $this->success([]);
         }
-
         $suggests = $this->gen_suggest($es_index, [$message_content=>10]);
         $params = [
             "index" => $es_index,
@@ -183,7 +188,10 @@ class SearchController extends ApiController
     {
         $user = Auth::user();
         $customer_id = $user->customer_id;
-        if (!$customer = Customer::query()->where("id", $customer_id)->first()) {
+        $customer = RedisService::cacheObject("getCustomerById", [$customer_id, 1], function () use ($customer_id) {
+            return Customer::query()->where("id", $customer_id)->where("is_active", 1)->first();
+        });
+        if (!$customer) {
             return ["message" => "企业不存在"];
         }
         $es_index = "dataai_es_index_" . md5($customer->api_id . $customer->api_key);
@@ -236,8 +244,11 @@ class SearchController extends ApiController
         $total = $response["hits"]["total"]["value"];
         foreach ($response['hits']['hits'] as $item) {
             $source = $item["_source"];
+            $cache_keys = array_push($source, $customer_id);
             /** 此处应该借助redis提高效率 */
-            $group = Friend::query()->where(["wxid" => $source["wxid"], "nickname" => $source["nickname"], "customer_id" => $customer_id, "friend_id" => $source["message_wxid"]])->first();
+            $group = RedisService::cacheObject("getCustomerById", $cache_keys, function () use ($source, $customer_id) {
+                return Friend::query()->where(["wxid" => $source["wxid"], "nickname" => $source["nickname"], "customer_id" => $customer_id, "friend_id" => $source["message_wxid"]])->first();
+            });
             $group_name = $group ? $group->friend_nickname : "未知";
             $item_arr = [
                 "nickname" => $source["nickname"] ?? "未知",
