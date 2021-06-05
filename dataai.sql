@@ -11,7 +11,7 @@
  Target Server Version : 80025
  File Encoding         : 65001
 
- Date: 05/06/2021 07:25:10
+ Date: 05/06/2021 08:30:09
 */
 
 SET NAMES utf8mb4;
@@ -272,14 +272,14 @@ CREATE TABLE `customers` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `customers_name_unique` (`name`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  UNIQUE KEY `customers_name_unique` (`name`,`api_id`,`api_key`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of customers
 -- ----------------------------
 BEGIN;
-INSERT INTO `customers` VALUES (1, '测试企业', 'V1RnsBJc1PUW88tWWwGt1bQCQJghisv9', 'guDDMHC4L7gzAc1jdLDO5bbfZCYHi2Nu', 1, '2021-06-01 02:58:21', '2021-06-01 02:58:21');
+INSERT INTO `customers` VALUES (3, '测试企业', 'wNqj0WWJoriyWCLEFroD1IMh4Plgh0Pq', 'JUV4OpNfq7LLGiEiRAbF1MoW4Ps8pVTb', 1, '2021-06-05 00:09:37', '2021-06-05 00:09:37');
 COMMIT;
 
 -- ----------------------------
@@ -361,13 +361,13 @@ CREATE TABLE `users` (
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `unique_name` (`name`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of users
 -- ----------------------------
 BEGIN;
-INSERT INTO `users` VALUES (7, 'zhangatle', '$2y$10$abzUR88FCKep7UoZdU6e6.HZyyaKIepL3d9covRP1Uieau8giniWG', NULL, 1, 1, '2021-06-01 03:41:43', '2021-06-01 03:41:43');
+INSERT INTO `users` VALUES (9, 'zhangatle', '$2y$10$7wnpZd9lhMuSwFr4TxXmkOGNPNBQNYggM0pKoUxLSVpsYfEgwGUvi', NULL, 3, 1, '2021-06-05 00:09:51', '2021-06-05 00:09:51');
 COMMIT;
 
 -- ----------------------------
