@@ -259,7 +259,8 @@ class SearchController extends ApiController
                 "message_wxid" => $source["message_wxid"] ?? "未知",
                 "message_group" => $group_name,
                 "score" => $item["_score"],
-                "create_date" => Carbon::parse($source['add_time'])->toDateTimeLocalString()
+                "create_date" => Carbon::parse($source['add_time'])->toDateTimeString(),
+                "create_time" => $source['add_time']
             ];
             if (isset($item["highlight"]["message_content"])) {
                 $item_arr["content"] = nl2br("" . join($item["highlight"]["message_content"]));
