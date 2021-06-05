@@ -68,6 +68,7 @@ class SearchController extends ApiController
     {
         $api_id = $request->input("api_id", "");
         $api_key = $request->input("api_key", "");
+        $msg_id = $request->input("msg_id", "");
 
         $customer = RedisService::cacheObject("getCustomerByApiIdApiKey", [$api_id, $api_key,1], function () use ($api_id, $api_key) {
             return Customer::query()->where("api_id", $api_id)->where("api_key", $api_key)->where("is_active", 1)->first();
@@ -100,7 +101,7 @@ class SearchController extends ApiController
                 Log::info($exception);
             }
         }
-        return $this->success([]);
+        return $this->success(['msg_id'=>$msg_id]);
     }
 
     /**
@@ -111,6 +112,7 @@ class SearchController extends ApiController
 
         $api_id = $request->input("api_id","");
         $api_key = $request->input("api_key","");
+        $msg_id = $request->input("msg_id", "");
 
         $content = $request->input("content", []);
 
@@ -147,7 +149,7 @@ class SearchController extends ApiController
             ]
         ];
         $client->index($params);
-        return $this->success([]);
+        return $this->success(['msg_id'=>$msg_id]);
     }
 
     /**
