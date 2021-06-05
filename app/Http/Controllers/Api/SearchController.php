@@ -27,7 +27,7 @@ class SearchController extends ApiController
         $client = ClientBuilder::create()->build();
         $user = Auth::user();
         $customer_id = $user->customer_id;
-        $customer = RedisService::cacheObject("getCustomerById", [$customer_id, 1], function () use ($customer_id) {
+        $customer = RedisService::cacheObject("getCustomerByIdOne", [$customer_id, 1], function () use ($customer_id) {
             return Customer::query()->where("id", $customer_id)->where("is_active", 1)->first();
         });
         if (!$customer) {
@@ -190,7 +190,7 @@ class SearchController extends ApiController
     {
         $user = Auth::user();
         $customer_id = $user->customer_id;
-        $customer = RedisService::cacheObject("getCustomerById", [$customer_id, 1], function () use ($customer_id) {
+        $customer = RedisService::cacheObject("getCustomerByIdOne", [$customer_id, 1], function () use ($customer_id) {
             return Customer::query()->where("id", $customer_id)->where("is_active", 1)->first();
         });
         if (!$customer) {
@@ -248,8 +248,8 @@ class SearchController extends ApiController
             $source = $item["_source"];
             $cache_keys = array_push($source, $customer_id);
             /** 此处应该借助redis提高效率 */
-            $group = RedisService::cacheObject("getCustomerById", $cache_keys, function () use ($source, $customer_id) {
-                return Friend::query()->where(["wxid" => $source["wxid"], "nickname" => $source["nickname"], "customer_id" => $customer_id, "friend_id" => $source["message_wxid"]])->first();
+            $group = RedisService::cacheObject("getCustomerByIdTwo", [$source["wxid"],$customer_id,$source["message_wxid"]], function () use ($source, $customer_id) {
+                return Friend::query()->where(["wxid" => $source["wxid"], "customer_id" => $customer_id, "friend_id" => $source["message_wxid"]])->first();
             });
             $group_name = $group ? $group->friend_nickname : "未知";
             $item_arr = [
