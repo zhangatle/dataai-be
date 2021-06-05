@@ -9,6 +9,7 @@ use App\Models\Friend;
 use App\Services\RedisService;
 use Carbon\Carbon;
 use Elasticsearch\ClientBuilder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -87,11 +88,13 @@ class SearchController extends ApiController
             $friend_remark = $user["remark"];
             $friend_nickname = $user['nickname'];
             $friend_number = $user["user_number"];
-            $friend = new Friend();
-            $friend->customer_id = $customer->id;
-            $friend->wxid = $wxid;
+            if(!$friend = Friend::query()->where("customer_id", $customer->id)->where("wxid", $wxid)->where('friend_id', $friend_id)->get()){
+                $friend = new Friend();
+                $friend->customer_id = $customer->id;
+                $friend->wxid = $wxid;
+                $friend->friend_id = $friend_id;
+            }
             $friend->nickname = $nickname;
-            $friend->friend_id = $friend_id;
             $friend->friend_remark = $friend_remark;
             $friend->friend_nickname = $friend_nickname;
             $friend->friend_number = $friend_number;
