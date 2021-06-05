@@ -76,11 +76,11 @@ class SearchController extends ApiController
             return $this->success([], "企业不存在");
         }
 
-        $content_json = $request->input("content_json", []);
+        $content = $request->input("content", []);
 
-        $wxid = $content_json["wxid"];
-        $nickname = $content_json["nickname"];
-        $user_list = $content_json["user_list"];
+        $wxid = $content["wxid"];
+        $nickname = $content["nickname"];
+        $user_list = $content["user_list"];
         foreach ($user_list as $user) {
             $friend_id = $user["userid"];
             $friend_remark = $user["remark"];
@@ -112,14 +112,14 @@ class SearchController extends ApiController
         $api_id = $request->input("api_id","");
         $api_key = $request->input("api_key","");
 
-        $content_json = $request->input("content_json", []);
+        $content = $request->input("content", []);
 
-        $nickname = $content_json["nickname"];
-        $wxid = $content_json["wxid"];
-        $message_msg_type = $content_json["message"]["msg_type"];
-        $message_wxid = $content_json["message"]["wxid"];
-        $message_sender = $content_json["message"]["sender"];
-        $message_content = $content_json["message"]["content"];
+        $nickname = $content["nickname"];
+        $wxid = $content["wxid"];
+        $message_msg_type = $content["message"]["msg_type"];
+        $message_wxid = $content["message"]["wxid"];
+        $message_sender = $content["message"]["sender"];
+        $message_content = $content["message"]["content"];
 
 
         $es_index = "dataai_es_index_".md5($api_id.$api_key);

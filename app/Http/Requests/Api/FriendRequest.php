@@ -14,12 +14,12 @@ class FriendRequest extends BaseRequest
         return [
             "api_id" => "required",
             "api_key" => "required",
-            "content_json.nickname" => "required",
-            "content_json.wxid" => "required",
-            "content_json.user_list.*.userid" => "required",
-            "content_json.user_list.*.remark" => "required",
-            "content_json.user_list.*.nickname" => "required",
-            "content_json.user_list.*.user_number" => "required",
+            "content.nickname" => "required",
+            "content.wxid" => "required",
+            "content.user_list.*.userid" => "required",
+            "content.user_list.*.remark" => "required",
+            "content.user_list.*.nickname" => "required",
+            "content.user_list.*.user_number" => "required",
         ];
     }
 }

@@ -15,12 +15,12 @@ class MessageRequest extends BaseRequest
         return [
             "api_id" => "required",
             "api_key" => "required",
-            "content_json.nickname" => "required",
-            "content_json.wxid" => "required",
-            "content_json.message.msg_type" => "required",
-            "content_json.message.wxid" => "required",
-            "content_json.message.sender" => "required",
-            "content_json.message.content" => "required",
+            "content.nickname" => "required",
+            "content.wxid" => "required",
+            "content.message.msg_type" => "required",
+            "content.message.wxid" => "required",
+            "content.message.sender" => "required",
+            "content.message.content" => "required",
         ];
     }
 }
