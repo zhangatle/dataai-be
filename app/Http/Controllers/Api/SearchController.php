@@ -88,7 +88,7 @@ class SearchController extends ApiController
             $friend_remark = $user["remark"];
             $friend_nickname = $user['nickname'];
             $friend_number = $user["user_number"];
-            if(!$friend = Friend::query()->where("customer_id", $customer->id)->where("wxid", $wxid)->where('friend_id', $friend_id)->get()){
+            if(!$friend = Friend::query()->where("customer_id", $customer->id)->where("wxid", $wxid)->where('friend_id', $friend_id)->first()){
                 $friend = new Friend();
                 $friend->customer_id = $customer->id;
                 $friend->wxid = $wxid;
