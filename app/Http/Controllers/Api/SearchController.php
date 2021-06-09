@@ -6,10 +6,10 @@ use App\Http\Requests\Api\FriendRequest;
 use App\Http\Requests\Api\MessageRequest;
 use App\Models\Customer;
 use App\Models\Friend;
+use App\Models\SearchKeyword;
 use App\Services\RedisService;
 use Carbon\Carbon;
 use Elasticsearch\ClientBuilder;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -203,6 +203,26 @@ class SearchController extends ApiController
         $page = $request->input("p", 1);
         $keywords = $request->input("q", "");
 
+        $behavior_words = RedisService::cacheObject("behavior_keyword", [], function () use ($keywords) {
+            return SearchKeyword::query()->where("type", 1)->pluck("keyword")->toArray();
+        }, 10);
+        $behavior_search = "";
+        foreach ($behavior_words as $item) {
+            if(mb_strpos($keywords, $item) !== false){
+                $behavior_search = $behavior_search . $item  . " ";
+            }
+        }
+
+        $work_words = RedisService::cacheObject("work_keyword", [], function () use ($keywords) {
+            return SearchKeyword::query()->where("type", 2)->pluck("keyword")->toArray();
+        }, 10);
+        $work_search = "";
+        foreach ($work_words as $item) {
+            if(mb_strpos($keywords, $item) !== false){
+                $work_search = $work_search . $item  . " ";
+            }
+        }
+
         if ($keywords == "") {
             return $this->success([]);
         }
@@ -215,11 +235,29 @@ class SearchController extends ApiController
             'type' => '_doc',
             'body' => [
                 'query' => [
-                    'multi_match' => [
-                        'query' => $keywords,
-                        'fields' => [
-                            'message_content'
-                        ]
+                    "bool" => [
+                        "must" => [
+                            'match' => [
+                                "message_content" => [
+                                    'query' => $keywords,
+                                    "minimum_should_match" => "85%"
+                                ]
+                            ]
+                        ],
+                        "should" => [
+                            ['match' => [
+                                "message_content" => [
+                                    'query' => $behavior_search,
+                                    "boost"=> 3,
+                                ]
+                            ]],
+                            ['match' => [
+                                "message_content" => [
+                                    'query' => $work_search,
+                                    "boost"=> 2,
+                                ]
+                            ]],
+                        ],
                     ]
                 ],
                 "from" => ($page - 1) * 10,
