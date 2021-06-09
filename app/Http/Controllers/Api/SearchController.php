@@ -248,7 +248,7 @@ class SearchController extends ApiController
                             ['match' => [
                                 "message_content" => [
                                     'query' => $behavior_search,
-                                    "boost"=> 3,
+                                    "boost"=> 5,
                                 ]
                             ]],
                             ['match' => [
