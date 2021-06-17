@@ -263,10 +263,10 @@ class SearchController extends ApiController
                 "from" => ($page - 1) * 10,
                 "size" => 10,
                 "sort" => [
-                    "_score"=> [
+                    "add_time"=> [
                         "order" => "desc"
                     ],
-                    "add_time"=> [
+                    "_score"=> [
                         "order" => "desc"
                     ]
                 ],
